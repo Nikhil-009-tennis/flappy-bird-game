@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Supabase Test</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .result { margin: 10px 0; padding: 10px; background: #f5f5f5; border-radius: 3px; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        input { padding: 8px; margin: 5px; width: 200px; }
+    </style>
+</head>
+<body>
+    <h1>Simple Supabase Test</h1>
+    
+    <div>
+        <h3>1. Test Direct Connection</h3>
+        <button onclick="testDirectConnection()">Test Direct Connection</button>
+        <div id="direct-result" class="result"></div>
+    </div>
+
+    <div>
+        <h3>2. Test User Creation</h3>
+        <input type="text" id="username" placeholder="Username" value="testuser">
+        <input type="password" id="password" placeholder="Password" value="testpass">
+        <button onclick="testCreateUser()">Create User</button>
+        <div id="create-result" class="result"></div>
+    </div>
+
+    <div>
+        <h3>3. Test User Retrieval</h3>
+        <button onclick="testGetUsers()">Get All Users</button>
+        <div id="get-result" class="result"></div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://insovfcglenqpfmzxmdv.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imluc292ZmNnbGVucXBmbXp4bWR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5NTk0OTEsImV4cCI6MjA3MDUzNTQ5MX0.apF1A78fSYYuq6sHU9AQs_gRJFMMWGGENfOlbGy2E8I';
+
+        // Initialize Supabase client
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        async function testDirectConnection() {
+            const resultDiv = document.getElementById('direct-result');
+            resultDiv.innerHTML = '<span class="info">Testing connection...</span>';
+            
+            try {
+                // Test basic connection
+                const { data, error } = await supabase.from('users').select('count').limit(1);
+                
+                if (error) {
+                    resultDiv.innerHTML = `<span class="error">❌ Connection failed: ${error.message}</span>`;
+                } else {
+                    resultDiv.innerHTML = '<span class="success">✅ Connection successful! Supabase is working.</span>';
+                }
+            } catch (err) {
+                resultDiv.innerHTML = `<span class="error">❌ Error: ${err.message}</span>`;
+            }
+        }
+
+        async function testCreateUser() {
+            const resultDiv = document.getElementById('create-result');
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (!username || !password) {
+                resultDiv.innerHTML = '<span class="error">Please enter username and password</span>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<span class="info">Creating user...</span>';
+            
+            try {
+                const { data, error } = await supabase
+                    .from('users')
+                    .insert({
+                        username: username,
+                        email: `${username}@test.local`,
+                        password_hash: password,
+                        coins: 100,
+                        best_score: 0,
+                        current_theme: 'classic'
+                    })
+                    .select()
+                    .single();
+                
+                if (error) {
+                    resultDiv.innerHTML = `<span class="error">❌ Failed to create user: ${error.message}</span>`;
+                } else {
+                    resultDiv.innerHTML = `<span class="success">✅ User created successfully!<br>
+                        Username: ${data.username}<br>
+                        ID: ${data.id}<br>
+                        Coins: ${data.coins}</span>`;
+                }
+            } catch (err) {
+                resultDiv.innerHTML = `<span class="error">❌ Error: ${err.message}</span>`;
+            }
+        }
+
+        async function testGetUsers() {
+            const resultDiv = document.getElementById('get-result');
+            resultDiv.innerHTML = '<span class="info">Fetching users...</span>';
+            
+            try {
+                const { data, error } = await supabase
+                    .from('users')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                
+                if (error) {
+                    resultDiv.innerHTML = `<span class="error">❌ Failed to get users: ${error.message}</span>`;
+                } else {
+                    resultDiv.innerHTML = `<span class="success">✅ Found ${data.length} users:</span><br>
+                        ${data.map(user => `${user.username} (${user.coins} coins) - Created: ${new Date(user.created_at).toLocaleString()}`).join('<br>')}`;
+                }
+            } catch (err) {
+                resultDiv.innerHTML = `<span class="error">❌ Error: ${err.message}</span>`;
+            }
+        }
+
+        // Auto-test connection on page load
+        window.onload = function() {
+            testDirectConnection();
+        };
+    </script>
+</body>
+</html> 

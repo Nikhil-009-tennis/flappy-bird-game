@@ -1,0 +1,47 @@
+{
+  "game": "Flappy Bird",
+  "version": "1.0.0",
+  "description": "A classic Flappy Bird game built with HTML5 Canvas and JavaScript",
+  "controls": {
+    "jump": ["SPACE", "Mouse Click"],
+    "start": "Click Start Game button or press SPACE",
+    "restart": "Click Restart button or Play Again after game over"
+  },
+  "features": [
+    "Smooth bird physics with gravity and rotation",
+    "Randomly generated pipes with varying gaps",
+    "Score tracking with local storage for best score",
+    "Beautiful animated background with clouds",
+    "Responsive design with modern UI",
+    "Collision detection and game over handling",
+    "Multiple theme options with different color schemes",
+    "Coin collection system with store"
+  ],
+  "settings": {
+    "canvas_width": 400,
+    "canvas_height": 600,
+    "bird_size": 30,
+    "pipe_width": 60,
+    "pipe_gap": 150,
+    "pipe_interval": 150,
+    "gravity": 0.5,
+    "jump_power": -8
+  },
+  "themes": {
+    "classic": "Original Flappy Bird colors",
+    "sunset": "Warm orange and red sunset theme",
+    "night": "Dark blue night theme",
+    "forest": "Green forest theme",
+    "ocean": "Blue ocean theme"
+  },
+  "store": {
+    "items": [
+      "Rainbow Bird (50 coins)",
+      "Golden Wings (100 coins)",
+      "Diamond Bird (200 coins)",
+      "Speed Boost (75 coins)",
+      "Shield (150 coins)",
+      "Coin Magnet (125 coins)"
+    ]
+  }
+}

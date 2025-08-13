@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Flappy Bird Database</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f0f0f0; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background: #fafafa; }
+        .success { color: #28a745; font-weight: bold; }
+        .error { color: #dc3545; font-weight: bold; }
+        .info { color: #17a2b8; font-weight: bold; }
+        button { padding: 12px 24px; margin: 8px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 5px; font-size: 14px; }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
+        input { padding: 10px; margin: 8px; width: 200px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+        .result { margin: 10px 0; padding: 15px; background: #f8f9fa; border-radius: 5px; border-left: 4px solid #007bff; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .status.success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .status.error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .status.info { background: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🦅 Flappy Bird Database Test</h1>
+        <p>This page will test your Supabase database connection and functionality.</p>
+        
+        <div class="test-section">
+            <h3>1. Database Connection Test</h3>
+            <button onclick="testConnection()" id="conn-btn">Test Connection</button>
+            <div id="connection-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>2. Create Test User</h3>
+            <input type="text" id="username" placeholder="Username" value="testuser">
+            <input type="password" id="password" placeholder="Password" value="testpass123">
+            <button onclick="createUser()" id="create-btn" disabled>Create User</button>
+            <div id="create-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3. View All Users</h3>
+            <button onclick="getUsers()" id="users-btn" disabled>Get All Users</button>
+            <div id="users-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>4. Test Store Items</h3>
+            <button onclick="getStoreItems()" id="store-btn" disabled>Get Store Items</button>
+            <div id="store-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>5. Test Game Themes</h3>
+            <button onclick="getThemes()" id="themes-btn" disabled>Get Game Themes</button>
+            <div id="themes-result" class="result"></div>
+        </div>
+
+        <div class="status info" id="overall-status">
+            Ready to test database connection...
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://insovfcglenqpfmzxmdv.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imluc292ZmNnbGVucXBmbXp4bWR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5NTk0OTEsImV4cCI6MjA3MDUzNTQ5MX0.apF1A78fSYYuq6sHU9AQs_gRJFMMWGGENfOlbGy2E8I';
+
+        // Initialize Supabase client
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let connectionOk = false;
+
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('overall-status');
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+        }
+
+        function enableButtons() {
+            document.getElementById('create-btn').disabled = false;
+            document.getElementById('users-btn').disabled = false;
+            document.getElementById('store-btn').disabled = false;
+            document.getElementById('themes-btn').disabled = false;
+        }
+
+        async function testConnection() {
+            const resultDiv = document.getElementById('connection-result');
+            const btn = document.getElementById('conn-btn');
+            
+            resultDiv.innerHTML = '<span class="info">🔍 Testing database connection...</span>';
+            btn.disabled = true;
+            
+            try {
+                // Test basic connection by trying to access users table
+                const { data, error } = await supabase.from('users').select('count').limit(1);
+                
+                if (error) {
+                    resultDiv.innerHTML = `<span class="error">❌ Connection failed: ${error.message}</span>`;
+                    updateStatus('Database connection failed. Please check your schema.', 'error');
+                } else {
+                    resultDiv.innerHTML = '<span class="success">✅ Database connection successful! All tables are accessible.</span>';
+                    connectionOk = true;
+                    enableButtons();
+                    updateStatus('Database is working! You can now test other functions.', 'success');
+                }
+            } catch (err) {
+                resultDiv.innerHTML = `<span class="error">❌ Error: ${err.message}</span>`;
+                updateStatus('Connection error occurred.', 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function createUser() {
+            const resultDiv = document.getElementById('create-result');
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (!username || !password) {
+                resultDiv.innerHTML = '<span class="error">Please enter both username and password</span>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<span class="info">🔄 Creating user...</span>';
+            
+            try {
+                const { data, error } = await supabase
+                    .from('users')
+                    .insert({
+                        username: username,
+                        email: `${username}@test.local`,
+                        password_hash: password,
+                        coins: 100,
+                        best_score: 0,
+                        current_theme: 'classic'
+                    })
+                    .select()
+                    .single();
+                
+                if (error) {
+                    resultDiv.innerHTML = `<span class="error">❌ Failed to create user: ${error.message}</span>`;
+                } else {
+                    resultDiv.innerHTML = `<span class="success">✅ User created successfully!<br>
+                        <strong>Username:</strong> ${data.username}<br>
+                        <strong>ID:</strong> ${data.id}<br>
+                        <strong>Coins:</strong> ${data.coins}<br>
+                        <strong>Created:</strong> ${new Date(data.created_at).toLocaleString()}</span>`;
+                }
+            } catch (err) {
+                resultDiv.innerHTML = `<span class="error">❌ Error: ${err.message}</span>`;
+            }
+        }
+
+        async function getUsers() {
+            const resultDiv = document.getElementById('users-result');
+            resultDiv.innerHTML = '<span class="info">🔄 Fetching users...</span>';
+            
+            try {
+                const { data, error } = await supabase
+                    .from('users')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                
+                if (error) {
+                    resultDiv.innerHTML = `<span class="error">❌ Failed to get users: ${error.message}</span>`;
+                } else {
+                    if (data.length === 0) {
+                        resultDiv.innerHTML = '<span class="info">No users found in database.</span>';
+                    } else {
+                        const userList = data.map(user => 
+                            `<div style="margin: 5px 0; padding: 8px; background: #e9ecef; border-radius: 3px;">
+                                <strong>${user.username}</strong> - ${user.coins} coins - Created: ${new Date(user.created_at).toLocaleString()}
+                            </div>`
+                        ).join('');
+                        
+                        resultDiv.innerHTML = `<span class="success">✅ Found ${data.length} user(s):</span><br>${userList}`;
+                    }
+                }
+            } catch (err) {
+                resultDiv.innerHTML = `<span class="error">❌ Error: ${err.message}</span>`;
+            }
+        }
+
+        async function getStoreItems() {
+            const resultDiv = document.getElementById('store-result');
+            resultDiv.innerHTML = '<span class="info">🔄 Fetching store items...</span>';
+            
+            try {
+                const { data, error } = await supabase
+                    .from('store_items')
+                    .select('*')
+                    .order('price', { ascending: true });
+                
+                if (error) {
+                    resultDiv.innerHTML = `<span class="error">❌ Failed to get store items: ${error.message}</span>`;
+                } else {
+                    if (data.length === 0) {
+                        resultDiv.innerHTML = '<span class="info">No store items found.</span>';
+                    } else {
+                        const itemList = data.map(item => 
+                            `<div style="margin: 5px 0; padding: 8px; background: #e9ecef; border-radius: 3px;">
+                                ${item.icon} <strong>${item.name}</strong> - ${item.price} coins (${item.rarity})
+                            </div>`
+                        ).join('');
+                        
+                        resultDiv.innerHTML = `<span class="success">✅ Found ${data.length} store item(s):</span><br>${itemList}`;
+                    }
+                }
+            } catch (err) {
+                resultDiv.innerHTML = `<span class="error">❌ Error: ${err.message}</span>`;
+            }
+        }
+
+        async function getThemes() {
+            const resultDiv = document.getElementById('themes-result');
+            resultDiv.innerHTML = '<span class="info">🔄 Fetching game themes...</span>';
+            
+            try {
+                const { data, error } = await supabase
+                    .from('game_themes')
+                    .select('*')
+                    .order('is_default', { ascending: false });
+                
+                if (error) {
+                    resultDiv.innerHTML = `<span class="error">❌ Failed to get themes: ${error.message}</span>`;
+                } else {
+                    if (data.length === 0) {
+                        resultDiv.innerHTML = '<span class="info">No themes found.</span>';
+                    } else {
+                        const themeList = data.map(theme => 
+                            `<div style="margin: 5px 0; padding: 8px; background: #e9ecef; border-radius: 3px;">
+                                <strong>${theme.display_name}</strong>${theme.is_default ? ' (Default)' : ''} - ${theme.description}
+                            </div>`
+                        ).join('');
+                        
+                        resultDiv.innerHTML = `<span class="success">✅ Found ${data.length} theme(s):</span><br>${themeList}`;
+                    }
+                }
+            } catch (err) {
+                resultDiv.innerHTML = `<span class="error">❌ Error: ${err.message}</span>`;
+            }
+        }
+
+        // Auto-test connection on page load
+        window.onload = function() {
+            testConnection();
+        };
+    </script>
+</body>
+</html> 

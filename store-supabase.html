@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Bird Store</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <style>
+        .store-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        .store-header {
+            margin-bottom: 30px;
+        }
+        
+        .store-header h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .user-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+        }
+        
+        .coin-display {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #FFD700;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        
+        .user-stats {
+            text-align: right;
+            font-size: 0.9em;
+            color: #7f8c8d;
+        }
+        
+        .store-tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            gap: 10px;
+        }
+        
+        .tab-btn {
+            background: #ecf0f1;
+            color: #7f8c8d;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1em;
+        }
+        
+        .tab-btn.active {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+        
+        .tab-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .store-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .store-item {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            position: relative;
+        }
+        
+        .store-item:hover {
+            transform: translateY(-5px);
+        }
+        
+        .item-rarity {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .rarity-common { background: #95a5a6; color: white; }
+        .rarity-rare { background: #3498db; color: white; }
+        .rarity-epic { background: #9b59b6; color: white; }
+        .rarity-legendary { background: #f39c12; color: white; }
+        
+        .item-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+        
+        .item-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .item-description {
+            color: #7f8c8d;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+            min-height: 40px;
+        }
+        
+        .item-price {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #FFD700;
+            margin-bottom: 15px;
+        }
+        
+        .buy-btn {
+            background: linear-gradient(45deg, #27AE60, #2ECC71);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        
+        .buy-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(39, 174, 96, 0.4);
+        }
+        
+        .buy-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .owned-badge {
+            background: linear-gradient(45deg, #9b59b6, #8e44ad);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .back-btn {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.1em;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+        
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
+        
+        .purchase-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #27AE60;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .purchase-message.show {
+            transform: translateX(0);
+        }
+        
+        .purchase-message.error {
+            background: #e74c3c;
+        }
+        
+        .inventory-item {
+            background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%);
+            border: 2px solid #28a745;
+        }
+        
+        .equipped-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: #28a745;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(52, 152, 219, 0.3);
+            border-radius: 50%;
+            border-top-color: #3498db;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="store-container">
+        <div class="store-header">
+            <h1>🛒 Flappy Bird Store</h1>
+            <div class="user-info">
+                <div class="coin-display">
+                    💰 Coins: <span id="storeCoins">0</span>
+                </div>
+                <div class="user-stats">
+                    <div>Best Score: <span id="bestScore">0</span></div>
+                    <div>Total Games: <span id="totalGames">0</span></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="store-tabs">
+            <button class="tab-btn active" onclick="showTab('store')">Store</button>
+            <button class="tab-btn" onclick="showTab('inventory')">Inventory</button>
+            <button class="tab-btn" onclick="showTab('themes')">Themes</button>
+        </div>
+        
+        <!-- Store Tab -->
+        <div id="storeTab" class="tab-content">
+            <div class="store-items" id="storeItems">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading store items...</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Inventory Tab -->
+        <div id="inventoryTab" class="tab-content" style="display: none;">
+            <div class="store-items" id="inventoryItems">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading inventory...</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Themes Tab -->
+        <div id="themesTab" class="tab-content" style="display: none;">
+            <div class="store-items" id="themeItems">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading themes...</p>
+                </div>
+            </div>
+        </div>
+        
+        <button class="back-btn" onclick="window.location.href='index.html'">← Back to Game</button>
+    </div>
+    
+    <div class="purchase-message" id="purchaseMessage"></div>
+    
+    <script>
+        let dbService;
+        let currentUser = null;
+        let storeItems = [];
+        let userPurchases = [];
+        let userInventory = [];
+        let gameThemes = [];
+        
+        // Initialize when page loads
+        window.addEventListener('load', async function() {
+            try {
+                // Check authentication
+                const userData = localStorage.getItem('flappyBirdCurrentUser');
+                if (!userData) {
+                    window.location.href = 'login-supabase.html';
+                    return;
+                }
+                
+                currentUser = JSON.parse(userData);
+                dbService = new DatabaseService();
+                
+                // Load user data and store items
+                await loadUserData();
+                await loadStoreItems();
+                await loadUserPurchases();
+                await loadGameThemes();
+                
+                // Update displays
+                updateCoinDisplay();
+                updateUserStats();
+                
+            } catch (error) {
+                console.error('Error initializing store:', error);
+                showMessage('Error loading store data', 'error');
+            }
+        });
+        
+        async function loadUserData() {
+            try {
+                const result = await dbService.getUserStats(currentUser.id);
+                if (result.success) {
+                    currentUser = { ...currentUser, ...result.stats };
+                    localStorage.setItem('flappyBirdCurrentUser', JSON.stringify(currentUser));
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+            }
+        }
+        
+        async function loadStoreItems() {
+            try {
+                const result = await dbService.getStoreItems();
+                if (result.success) {
+                    storeItems = result.items;
+                    renderStoreItems();
+                }
+            } catch (error) {
+                console.error('Error loading store items:', error);
+            }
+        }
+        
+        async function loadUserPurchases() {
+            try {
+                const result = await dbService.getUserPurchases(currentUser.id);
+                if (result.success) {
+                    userPurchases = result.purchases;
+                }
+            } catch (error) {
+                console.error('Error loading user purchases:', error);
+            }
+        }
+        
+        async function loadGameThemes() {
+            try {
+                const result = await dbService.getGameThemes();
+                if (result.success) {
+                    gameThemes = result.themes;
+                    renderThemes();
+                }
+            } catch (error) {
+                console.error('Error loading game themes:', error);
+            }
+        }
+        
+        function renderStoreItems() {
+            const container = document.getElementById('storeItems');
+            container.innerHTML = '';
+            
+            storeItems.forEach(item => {
+                const isOwned = userPurchases.some(purchase => purchase.item_id === item.id);
+                
+                const itemElement = document.createElement('div');
+                itemElement.className = 'store-item';
+                itemElement.innerHTML = `
+                    <div class="item-rarity rarity-${item.rarity}">${item.rarity}</div>
+                    <div class="item-icon">${item.icon}</div>
+                    <div class="item-name">${item.name}</div>
+                    <div class="item-description">${item.description}</div>
+                    <div class="item-price">Cost: ${item.price} coins</div>
+                    ${isOwned ? 
+                        '<div class="owned-badge">Owned</div>' : 
+                        `<button class="buy-btn" onclick="purchaseItem('${item.id}', ${item.price})">Buy</button>`
+                    }
+                `;
+                container.appendChild(itemElement);
+            });
+        }
+        
+        function renderThemes() {
+            const container = document.getElementById('themeItems');
+            container.innerHTML = '';
+            
+            gameThemes.forEach(theme => {
+                const isOwned = theme.is_default || theme.price === 0;
+                const isCurrent = currentUser.current_theme === theme.name;
+                
+                const themeElement = document.createElement('div');
+                themeElement.className = 'store-item';
+                themeElement.innerHTML = `
+                    <div class="item-icon">🎨</div>
+                    <div class="item-name">${theme.display_name}</div>
+                    <div class="item-description">${theme.description}</div>
+                    <div class="item-price">${isOwned ? 'Free' : `Cost: ${theme.price} coins`}</div>
+                    ${isCurrent ? 
+                        '<div class="owned-badge">Current Theme</div>' : 
+                        (isOwned ? 
+                            `<button class="buy-btn" onclick="equipTheme('${theme.name}')">Equip</button>` :
+                            `<button class="buy-btn" onclick="purchaseTheme('${theme.id}', ${theme.price})">Buy</button>`
+                        )
+                    }
+                `;
+                container.appendChild(themeElement);
+            });
+        }
+        
+        async function purchaseItem(itemId, price) {
+            if (currentUser.coins < price) {
+                showMessage('Not enough coins!', 'error');
+                return;
+            }
+            
+            try {
+                const result = await dbService.purchaseItem(currentUser.id, itemId);
+                
+                if (result.success) {
+                    // Update local data
+                    currentUser.coins -= price;
+                    await loadUserPurchases();
+                    
+                    // Update displays
+                    updateCoinDisplay();
+                    renderStoreItems();
+                    
+                    showMessage('Purchase successful!');
+                } else {
+                    showMessage('Purchase failed: ' + result.error, 'error');
+                }
+            } catch (error) {
+                console.error('Error purchasing item:', error);
+                showMessage('Error processing purchase', 'error');
+            }
+        }
+        
+        async function purchaseTheme(themeId, price) {
+            if (currentUser.coins < price) {
+                showMessage('Not enough coins!', 'error');
+                return;
+            }
+            
+            try {
+                // For themes, we'll add them to user inventory
+                const result = await dbService.purchaseItem(currentUser.id, themeId);
+                
+                if (result.success) {
+                    currentUser.coins -= price;
+                    await loadUserPurchases();
+                    
+                    updateCoinDisplay();
+                    renderThemes();
+                    
+                    showMessage('Theme purchased successfully!');
+                } else {
+                    showMessage('Theme purchase failed: ' + result.error, 'error');
+                }
+            } catch (error) {
+                console.error('Error purchasing theme:', error);
+                showMessage('Error processing theme purchase', 'error');
+            }
+        }
+        
+        async function equipTheme(themeName) {
+            try {
+                const result = await dbService.updateUserTheme(currentUser.id, themeName);
+                
+                if (result.success) {
+                    currentUser.current_theme = themeName;
+                    localStorage.setItem('flappyBirdCurrentUser', JSON.stringify(currentUser));
+                    renderThemes();
+                    showMessage('Theme equipped successfully!');
+                } else {
+                    showMessage('Failed to equip theme', 'error');
+                }
+            } catch (error) {
+                console.error('Error equipping theme:', error);
+                showMessage('Error equipping theme', 'error');
+            }
+        }
+        
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.style.display = 'none';
+            });
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + 'Tab').style.display = 'block';
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+        }
+        
+        function updateCoinDisplay() {
+            document.getElementById('storeCoins').textContent = currentUser.coins || 0;
+        }
+        
+        function updateUserStats() {
+            document.getElementById('bestScore').textContent = currentUser.best_score || 0;
+            document.getElementById('totalGames').textContent = currentUser.total_games || 0;
+        }
+        
+        function showMessage(message, type = 'success') {
+            const messageEl = document.getElementById('purchaseMessage');
+            messageEl.textContent = message;
+            messageEl.className = `purchase-message ${type}`;
+            messageEl.classList.add('show');
+            
+            setTimeout(() => {
+                messageEl.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html> 

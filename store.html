@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Bird Store</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .store-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        .store-header {
+            margin-bottom: 30px;
+        }
+        
+        .store-header h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .coin-display {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #FFD700;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+            margin-bottom: 30px;
+        }
+        
+        .store-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .store-item {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .store-item:hover {
+            transform: translateY(-5px);
+        }
+        
+        .item-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+        
+        .item-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .item-description {
+            color: #7f8c8d;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+        }
+        
+        .item-price {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #FFD700;
+            margin-bottom: 15px;
+        }
+        
+        .buy-btn {
+            background: linear-gradient(45deg, #27AE60, #2ECC71);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+        
+        .buy-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(39, 174, 96, 0.4);
+        }
+        
+        .buy-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .back-btn {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.1em;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+        
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
+        
+        .purchase-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #27AE60;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+        
+        .purchase-message.show {
+            transform: translateX(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="store-container">
+        <div class="store-header">
+            <h1>🛒 Flappy Bird Store</h1>
+            <div class="coin-display">
+                💰 Coins: <span id="storeCoins">0</span>
+            </div>
+        </div>
+        
+        <div class="store-items">
+            <div class="store-item">
+                <div class="item-icon">🎨</div>
+                <div class="item-name">Rainbow Bird</div>
+                <div class="item-description">A colorful rainbow bird skin</div>
+                <div class="item-price">Cost: 25 coins</div>
+                <button class="buy-btn" data-item="rainbow-bird" data-price="25">Buy</button>
+            </div>
+            
+            <div class="store-item">
+                <div class="item-icon">⭐</div>
+                <div class="item-name">Golden Wings</div>
+                <div class="item-description">Shiny golden wing effects</div>
+                <div class="item-price">Cost: 50 coins</div>
+                <button class="buy-btn" data-item="golden-wings" data-price="50">Buy</button>
+            </div>
+            
+            <div class="store-item">
+                <div class="item-icon">💎</div>
+                <div class="item-name">Diamond Bird</div>
+                <div class="item-description">A sparkling diamond bird</div>
+                <div class="item-price">Cost: 100 coins</div>
+                <button class="buy-btn" data-item="diamond-bird" data-price="100">Buy</button>
+            </div>
+            
+            <div class="store-item">
+                <div class="item-icon">🚀</div>
+                <div class="item-name">Speed Boost</div>
+                <div class="item-description">Temporary speed boost power-up</div>
+                <div class="item-price">Cost: 35 coins</div>
+                <button class="buy-btn" data-item="speed-boost" data-price="35">Buy</button>
+            </div>
+            
+            <div class="store-item">
+                <div class="item-icon">🛡️</div>
+                <div class="item-name">Shield</div>
+                <div class="item-description">Protection from one collision</div>
+                <div class="item-price">Cost: 75 coins</div>
+                <button class="buy-btn" data-item="shield" data-price="75">Buy</button>
+            </div>
+            
+            <div class="store-item">
+                <div class="item-icon">🎯</div>
+                <div class="item-name">Coin Magnet</div>
+                <div class="item-description">Attracts coins from a distance</div>
+                <div class="item-price">Cost: 60 coins</div>
+                <button class="buy-btn" data-item="coin-magnet" data-price="60">Buy</button>
+            </div>
+        </div>
+        
+        <button class="back-btn" onclick="window.location.href='index.html'">← Back to Game</button>
+    </div>
+    
+    <div class="purchase-message" id="purchaseMessage"></div>
+    
+    <script>
+        // Authentication check
+        const currentUser = localStorage.getItem('flappyBirdCurrentUser');
+        if (!currentUser) {
+            window.location.href = 'login.html';
+        }
+        
+        // Load user-specific data
+        let storeCoins = 0;
+        const users = JSON.parse(localStorage.getItem('flappyBirdUsers')) || {};
+        
+        if (currentUser === 'guest') {
+            storeCoins = parseInt(localStorage.getItem('flappyBirdCoins') || 0);
+        } else if (users[currentUser]) {
+            storeCoins = users[currentUser].coins || 0;
+        }
+        
+        // Update coin display
+        document.getElementById('storeCoins').textContent = storeCoins;
+        
+        // Handle purchases
+        document.querySelectorAll('.buy-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const item = this.dataset.item;
+                const price = parseInt(this.dataset.price);
+                
+                if (storeCoins >= price) {
+                    // Purchase successful
+                    storeCoins -= price;
+                    document.getElementById('storeCoins').textContent = storeCoins;
+                    
+                    // Save user-specific data
+                    if (currentUser === 'guest') {
+                        localStorage.setItem('flappyBirdCoins', storeCoins.toString());
+                    } else if (users[currentUser]) {
+                        users[currentUser].coins = storeCoins;
+                        localStorage.setItem('flappyBirdUsers', JSON.stringify(users));
+                    }
+                    
+                    // Save purchased item
+                    const purchasedItems = JSON.parse(localStorage.getItem('flappyBirdPurchases') || '[]');
+                    if (!purchasedItems.includes(item)) {
+                        purchasedItems.push(item);
+                        localStorage.setItem('flappyBirdPurchases', JSON.stringify(purchasedItems));
+                    }
+                    
+                    // Show success message
+                    showPurchaseMessage('Purchase successful!');
+                    
+                    // Disable button if item is already purchased
+                    this.disabled = true;
+                    this.textContent = 'Owned';
+                } else {
+                    // Not enough coins
+                    showPurchaseMessage('Not enough coins!');
+                }
+            });
+        });
+        
+        // Check owned items on load
+        window.addEventListener('load', function() {
+            const purchasedItems = JSON.parse(localStorage.getItem('flappyBirdPurchases') || '[]');
+            
+            document.querySelectorAll('.buy-btn').forEach(btn => {
+                const item = btn.dataset.item;
+                if (purchasedItems.includes(item)) {
+                    btn.disabled = true;
+                    btn.textContent = 'Owned';
+                }
+            });
+        });
+        
+        // Show purchase message
+        function showPurchaseMessage(message) {
+            const messageEl = document.getElementById('purchaseMessage');
+            messageEl.textContent = message;
+            messageEl.classList.add('show');
+            
+            setTimeout(() => {
+                messageEl.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html> 
