@@ -66,6 +66,7 @@ const gameOverElement = document.getElementById('gameOver');
 // Game state
 let gameRunning = false;
 let gameStarted = false;
+let countdownActive = false;
 let score = 0;
 let bestScore = localStorage.getItem('flappyBirdBestScore') || 0;
 let coins = parseInt(localStorage.getItem('flappyBirdCoins') || 0);
@@ -252,6 +253,7 @@ function resetGame() {
     coinTimer = 0;
     gameRunning = false;
     gameStarted = false;
+    countdownActive = false;
     
     // Reset power-ups
     for (const powerUp in activePowerUps) {
@@ -266,11 +268,71 @@ function resetGame() {
 
 // Start game
 function startGame() {
-    gameRunning = true;
     gameStarted = true;
     startBtn.style.display = 'none';
     restartBtn.style.display = 'inline-block';
-    gameLoop();
+    
+    // Start countdown
+    startCountdown();
+}
+
+// Countdown function
+function startCountdown() {
+    let countdown = 3;
+    countdownActive = true;
+    
+    const countdownInterval = setInterval(() => {
+        if (countdown > 0) {
+            // Show countdown on canvas
+            showCountdown(countdown);
+            countdown--;
+        } else {
+            // Start the game after countdown
+            clearInterval(countdownInterval);
+            countdownActive = false;
+            gameRunning = true;
+            gameLoop();
+        }
+    }, 1000);
+}
+
+// Show countdown on canvas
+function showCountdown(number) {
+    // Clear canvas and draw background
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw background elements
+    drawBackground();
+    drawGround();
+    
+    // Draw countdown overlay
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw countdown number
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 80px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    // Add shadow for better visibility
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+    ctx.shadowBlur = 10;
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 2;
+    
+    ctx.fillText(number.toString(), canvas.width / 2, canvas.height / 2);
+    
+    // Reset shadow
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+    
+    // Draw "Get Ready!" text
+    ctx.font = 'bold 24px Arial';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.fillText('Get Ready!', canvas.width / 2, canvas.height / 2 + 60);
 }
 
 
@@ -774,6 +836,11 @@ function draw() {
             ctx.font = '16px Arial';
             ctx.fillText('Power-ups: S = Speed, H = Shield, M = Magnet', canvas.width / 2, canvas.height / 2);
         }
+    }
+    
+    // Don't draw game elements during countdown
+    if (countdownActive) {
+        return;
     }
     
     // Draw active power-up indicators
