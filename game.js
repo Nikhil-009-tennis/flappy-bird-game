@@ -272,13 +272,23 @@ function startGame() {
     startBtn.style.display = 'none';
     restartBtn.style.display = 'inline-block';
     
-    // Start countdown
-    startCountdown();
+    // Track countdown start for analytics (if database is available)
+    if (typeof trackCountdownStart === 'function') {
+        trackCountdownStart();
+    }
+    
+    // Immediately show the first countdown number
+    showCountdown(3);
+    
+    // Start countdown after a brief moment to ensure smooth transition
+    setTimeout(() => {
+        startCountdown();
+    }, 100);
 }
 
 // Countdown function
 function startCountdown() {
-    let countdown = 3;
+    let countdown = 2; // Start from 2 since we already showed 3
     countdownActive = true;
     
     const countdownInterval = setInterval(() => {
@@ -286,14 +296,21 @@ function startCountdown() {
             // Show countdown on canvas
             showCountdown(countdown);
             countdown--;
-        } else {
-            // Start the game after countdown
+        } else if (countdown === 0) {
+            // Show "GO!" message
+            showGoMessage();
             clearInterval(countdownInterval);
+        }
+    }, 1000);
+    
+    // Start the game after showing "GO!" message
+    setTimeout(() => {
+        if (countdownActive) {
             countdownActive = false;
             gameRunning = true;
             gameLoop();
         }
-    }, 1000);
+    }, 3000); // 3 seconds total: 2, 1, GO!
 }
 
 // Show countdown on canvas
@@ -306,22 +323,22 @@ function showCountdown(number) {
     drawGround();
     
     // Draw countdown overlay
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Draw countdown number
-    ctx.fillStyle = 'white';
-    ctx.font = 'bold 80px Arial';
+    // Draw countdown number with better styling
+    ctx.fillStyle = '#FFD700'; // Gold color for countdown
+    ctx.font = 'bold 120px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     
     // Add shadow for better visibility
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-    ctx.shadowBlur = 10;
-    ctx.shadowOffsetX = 2;
-    ctx.shadowOffsetY = 2;
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+    ctx.shadowBlur = 15;
+    ctx.shadowOffsetX = 3;
+    ctx.shadowOffsetY = 3;
     
-    ctx.fillText(number.toString(), canvas.width / 2, canvas.height / 2);
+    ctx.fillText(number.toString(), canvas.width / 2, canvas.height / 2 - 20);
     
     // Reset shadow
     ctx.shadowColor = 'transparent';
@@ -330,9 +347,69 @@ function showCountdown(number) {
     ctx.shadowOffsetY = 0;
     
     // Draw "Get Ready!" text
-    ctx.font = 'bold 24px Arial';
+    ctx.font = 'bold 32px Arial';
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillText('Get Ready!', canvas.width / 2, canvas.height / 2 + 80);
+    
+    // Draw "Starting in..." text
+    ctx.font = '20px Arial';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.fillText('Starting in...', canvas.width / 2, canvas.height / 2 + 120);
+    
+    // Draw "Click or Press SPACE to jump" text
+    ctx.font = '18px Arial';
     ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-    ctx.fillText('Get Ready!', canvas.width / 2, canvas.height / 2 + 60);
+    ctx.fillText('Click or Press SPACE to jump', canvas.width / 2, canvas.height / 2 + 150);
+    
+    // Add a small animation effect - scale the number slightly
+    const scale = 1 + (0.1 * Math.sin(Date.now() * 0.01));
+    ctx.save();
+    ctx.translate(canvas.width / 2, canvas.height / 2 - 20);
+    ctx.scale(scale, scale);
+    ctx.fillText(number.toString(), 0, 0);
+    ctx.restore();
+}
+
+// Show "GO!" message
+function showGoMessage() {
+    // Clear canvas and draw background
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw background elements
+    drawBackground();
+    drawGround();
+    
+    // Draw overlay
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw "GO!" text
+    ctx.fillStyle = '#00FF00'; // Green color for GO!
+    ctx.font = 'bold 100px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    // Add shadow for better visibility
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+    ctx.shadowBlur = 15;
+    ctx.shadowOffsetX = 3;
+    ctx.shadowOffsetY = 3;
+    
+    ctx.fillText('GO!', canvas.width / 2, canvas.height / 2);
+    
+    // Reset shadow
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+    
+    // Add a pulsing animation effect
+    const pulse = 1 + (0.2 * Math.sin(Date.now() * 0.02));
+    ctx.save();
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.scale(pulse, pulse);
+    ctx.fillText('GO!', 0, 0);
+    ctx.restore();
 }
 
 
@@ -916,6 +993,20 @@ document.addEventListener('keydown', (e) => {
         activatePowerUp('coin-magnet');
     }
 });
+
+// Track countdown start for analytics
+function trackCountdownStart() {
+    // This function can be used to track countdown usage in the database
+    // It will be called whenever a countdown starts
+    console.log('Countdown started - tracking for analytics');
+    
+    // You can integrate this with your Supabase database here
+    // Example: Call the track_countdown_usage function from your database
+    if (typeof supabase !== 'undefined' && currentUser) {
+        // Database integration code would go here
+        console.log('Database tracking available for user:', currentUser);
+    }
+}
 
 // Initialize the game
 init(); 
